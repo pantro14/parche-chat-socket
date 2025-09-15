@@ -34,6 +34,14 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('typing', ({ chat, senderId }) => {
+    chat.users.forEach((user) => {
+      if (user._id !== senderId) {
+        io.to(user._id).emit('typing', chat);
+      }
+    });
+  });
+
   socket.on('logout', (userId) => {
     socket.leave(userId);
     onlineUsers.delete(userId);
