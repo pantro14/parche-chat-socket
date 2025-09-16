@@ -34,10 +34,10 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('typing', ({ chat, senderId }) => {
+  socket.on('typing', ({ chat, senderId, senderName }) => {
     chat.users.forEach((user) => {
       if (user._id !== senderId) {
-        io.to(user._id).emit('typing', chat);
+        io.to(user._id).emit('typing', { chat, senderName });
       }
     });
   });
