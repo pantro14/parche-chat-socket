@@ -34,6 +34,17 @@ io.on('connection', (socket) => {
     });
   });
 
+  socket.on('read-all-messages', ({ chatId, readByUserId, users }) => {
+    users.forEach((user) => {
+      {
+        io.to(user).emit('user-read-all-chat-messages', {
+          chatId,
+          readByUserId,
+        });
+      }
+    });
+  });
+
   socket.on('typing', ({ chat, senderId, senderName }) => {
     chat.users.forEach((user) => {
       if (user._id !== senderId) {
