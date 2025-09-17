@@ -63,5 +63,5 @@ io.on('connection', (socket) => {
 });
 
 app.get('/', (req, res) => {
-  return res.send('Server is running');
+  return res.send('parche chat web socket is running');
 });
