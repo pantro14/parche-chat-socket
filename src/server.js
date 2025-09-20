@@ -1,67 +1,28 @@
 const express = require('express');
 const { Server } = require('socket.io');
+const { registerSocketHandlers } = require('./socketHandlers');
 
 const app = express();
 const port = process.env.PORT || 8000;
+
+// start express server
 const server = app.listen(port, () => {
   console.log(`Parche chat socket running on port ${port}`);
 });
 
+// create socket.io instance
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-  },
+  cors: { origin: '*' },
 });
 
-let onlineUsers = new Set();
-
+// attach socket event handlers
 io.on('connection', (socket) => {
-  socket.on('join', (userId) => {
-    if (!socket.rooms.has(userId)) {
-      socket.join(userId);
-      if (!onlineUsers.has(userId)) {
-        onlineUsers.add(userId);
-      }
-    }
-    onlineUsers.forEach((user) => {
-      io.to(user).emit('online-users-updated', Array.from(onlineUsers));
-    });
-  });
-
-  socket.on('send-new-message', (message) => {
-    message.chat.users.forEach((user) => {
-      io.to(user._id).emit('new-message-received', message);
-    });
-  });
-
-  socket.on('read-all-messages', ({ chatId, readByUserId, users }) => {
-    users.forEach((user) => {
-      {
-        io.to(user).emit('user-read-all-chat-messages', {
-          chatId,
-          readByUserId,
-        });
-      }
-    });
-  });
-
-  socket.on('typing', ({ chat, senderId, senderName }) => {
-    chat.users.forEach((user) => {
-      if (user._id !== senderId) {
-        io.to(user._id).emit('typing', { chat, senderName });
-      }
-    });
-  });
-
-  socket.on('logout', (userId) => {
-    socket.leave(userId);
-    onlineUsers.delete(userId);
-    onlineUsers.forEach((user) => {
-      io.to(user).emit('online-users-updated', Array.from(onlineUsers));
-    });
-  });
+  registerSocketHandlers(io, socket);
 });
 
+// simple health check
 app.get('/', (req, res) => {
-  return res.send('parche chat web socket is running');
+  res.send('parche chat web socket is running');
 });
+
+module.exports = { app, server, io };
